@@ -7,12 +7,40 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/menu.css') }}">
 </head>
 <body>
+    <!-- Música de fondo -->
+    <audio id="musica-fondo" loop>
+        <source src="{{ url_for('static', filename='sounds/menu.mp3') }}" type="audio/mp3">
+        Tu navegador no soporta audio.
+    </audio>
+
     <main>
-        <h1> Entorno Virtual Te La Choco</h1>
-        <div class="contenedor-botones">
-            <a href="/minijuego"><button>Jugar</button></a>
-            <a href="/prueba"><button>Prueba</button></a>
+        <div class="menu">
+            <h1>Entorno Virtual Te La Choco</h1>
+            <div class="contenedor-botones">
+                <a href="/minijuego"><button>Jugar</button></a>
+                <a href="/prueba"><button>Prueba</button></a>
+                <button id="toggle-music">Reproducir Música</button>
+            </div>
         </div>
     </main>
+
+    <script>
+        const musica = document.getElementById('musica-fondo');
+        const boton = document.getElementById('toggle-music');
+
+        // Control del botón
+        boton.addEventListener('click', () => {
+            if (musica.paused) {
+                musica.play().then(() => {
+                    boton.textContent = "Pausar Música";
+                }).catch(() => {
+                    console.log("No se pudo reproducir la música");
+                });
+            } else {
+                musica.pause();
+                boton.textContent = "Reproducir Música";
+            }
+        });
+    </script>
 </body>
 </html>

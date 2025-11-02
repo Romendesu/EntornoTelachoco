@@ -6,14 +6,25 @@
 
 body {
     height: 90vh;
+    display: grid;
+    place-content: center;
+    background: url("../sprites/img/background.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.menu {
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: #353535;
     color: white;
     gap:20px;
+    flex-direction: column;
+    padding: 20px;
+    border-radius: 40px;
+    opacity: 0.85;
 }
-
 button {
     border: solid #242424 5px;
     width: 200px;
@@ -33,5 +44,6 @@ button:hover {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
     gap:5px;
 }
