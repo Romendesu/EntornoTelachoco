@@ -3,46 +3,38 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Entorno de gestos 3D</title>
-
-    <!-- A-Frame -->
+    <title>Reconocimiento de Gestos 3D</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-
-    <!-- CSS externo -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   </head>
 
   <body>
+    <!-- Cámara del reconocedor -->
     <div class="label">Cámara en vivo</div>
     <div id="overlay">
       <img id="videoFeed" src="/video_feed" alt="Video en vivo" />
     </div>
 
-    <!-- Texto siempre visible (HUD) -->
-    <div id="hud-text">Detectando gestos...</div>
+    <!-- HUD de información -->
+    <div id="hud">
+      <div id="hud-text">Detectando gestos...</div>
+      <div id="hud-score">Puntaje: 0</div>
+    </div>
 
-    <!-- Escenario A-Frame -->
-    <a-scene>
-      <a-entity light="type: ambient; intensity: 0.7"></a-entity>
-      <a-entity light="type: directional; intensity: 0.8" position="2 4 -3"></a-entity>
+    <!-- Escenario 3D -->
+    <a-scene id="scene" cursor="rayOrigin: mouse" raycaster="objects: .target">
+      <a-entity light="type: ambient; intensity: 0.6"></a-entity>
+      <a-entity light="type: directional; intensity: 0.9" position="2 4 -3"></a-entity>
 
-      <a-plane position="0 0 -4" rotation="-90 0 0" width="20" height="20" color="#101010" shadow></a-plane>
+      <a-sky color="#050505"></a-sky>
+      <a-plane position="0 0 -4" rotation="-90 0 0" width="25" height="25" color="#0a0a0a"></a-plane>
 
-      <a-box
-        id="cubo"
-        position="0 1.5 -3"
-        rotation="0 45 0"
-        color="#00ffff"
-        shadow
-        animation="property: rotation; to: 0 405 0; loop: true; dur: 4000"
-      ></a-box>
+      <a-box id="player-box" position="0 1.5 -3" rotation="0 45 0" color="#00ffff"
+             animation="property: rotation; to: 0 405 0; loop: true; dur: 4000"></a-box>
 
-      <a-entity position="0 1.6 0">
-        <a-camera></a-camera>
-      </a-entity>
+      <a-entity position="0 1.6 0"><a-camera></a-camera></a-entity>
     </a-scene>
 
-    <!-- JS externo -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
   </body>
 </html>
