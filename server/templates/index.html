@@ -1,40 +1,564 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reconocimiento de Gestos 3D</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  </head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minijuego de Gestos 3D</title>
 
-  <body>
-    <!-- Cámara del reconocedor -->
-    <div class="label">Cámara en vivo</div>
-    <div id="overlay">
-      <img id="videoFeed" src="/video_feed" alt="Video en vivo" />
+  <!-- Estilos críticos inline -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap');
+    
+    body { 
+      margin: 0; 
+      background: #353535; 
+      color: #fff; 
+      font-family: 'Quicksand', system-ui, sans-serif;
+      overflow: hidden;
+    }
+    
+    /* Escena A-Frame */
+    a-scene {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 1 !important;
+    }
+
+    /* HUD principal */
+    #hud {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    #hud div {
+      background: rgba(25,25,25,0.85);
+      border: 2px solid #4f4f4f;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 700;
+      backdrop-filter: blur(8px);
+      transform-origin: left center;
+      animation: hudEntrada 0.3s ease-out;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    #hud-score {
+      color: #00ff9d;
+      font-size: 1.2em;
+    }
+
+    #hud-lives {
+      color: #ff6b6b;
+    }
+
+    #hud-combo {
+      color: #66d9ff;
+      font-size: 0.9em;
+    }
+
+    /* Tarjeta moderna para el gesto del minicubo */
+    #mini-gesture-card {
+      position: absolute;
+      left: 50%;
+      bottom: 28px;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.12));
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      min-width: 220px;
+      backdrop-filter: blur(6px) saturate(120%);
+      font-weight: 700;
+      font-size: 18px;
+      opacity: 0.95;
+    }
+    #mini-gesture-card .icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: #102210;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9fe39f;
+      font-size: 20px;
+      box-shadow: inset 0 -6px 12px rgba(0,0,0,0.2);
+    }
+    #mini-gesture-card .text {
+      flex: 1;
+      text-align: left;
+      font-size: 18px;
+      color: #e6ffe6;
+    }
+    #mini-gesture-card.hidden { display: none; }
+
+    /* Feed de cámara */
+    #camera-ui {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      text-align: center;
+      background: rgba(25,25,25,0.85);
+      padding: 12px;
+      border-radius: 16px;
+      border: 2px solid #4f4f4f;
+      z-index: 999;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      animation: cameraEntrada 0.4s ease-out;
+    }
+
+    #camera-ui .label {
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    #camera-ui img {
+      width: 220px;
+      height: 165px;
+      border-radius: 12px;
+      border: 2px solid #4f4f4f;
+      object-fit: contain;
+      background: #111;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    #gesto-actual {
+      margin-top: 10px;
+      color: #66d9ff;
+      font-weight: 700;
+      text-shadow: 0 0 8px rgba(102,217,255,0.5);
+      animation: gestoEntrada 0.3s ease-out;
+    }
+
+    /* Game Over Menu */
+    #game-over-menu {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.85);
+      padding: 2rem;
+      border-radius: 20px;
+      text-align: center;
+      z-index: 9999;
+      backdrop-filter: blur(10px);
+      border: 3px solid #ff6b6b;
+      box-shadow: 0 0 30px rgba(255,0,0,0.2);
+      animation: gameOverEntrada 0.5s ease-out;
+    }
+
+      .game-over-image {
+        width: 200px;
+        height: 200px;
+        object-fit: contain;
+        margin-bottom: 1rem;
+        animation: pulseImage 2s infinite ease-in-out;
+      }
+
+      @keyframes pulseImage {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+
+    #game-over-menu h2 {
+      color: #ff6b6b;
+      font-size: 2.5rem;
+      margin: 0 0 1rem 0;
+      text-shadow: 0 0 10px rgba(255,107,107,0.5);
+    }
+
+    #game-over-menu .score {
+      color: #00ff9d;
+      font-size: 1.5rem;
+      margin: 1rem 0;
+      text-shadow: 0 0 10px rgba(0,255,157,0.5);
+    }
+
+    #game-over-menu .buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    #game-over-menu button {
+      background: transparent;
+      color: white;
+      border: 2px solid white;
+      padding: 0.8rem 1.5rem;
+      font-size: 1.1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      font-weight: bold;
+    }
+
+    #game-over-menu button:hover {
+      background: rgba(255,255,255,0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    @keyframes gameOverEntrada {
+      from { 
+        transform: translate(-50%, -40%); 
+        opacity: 0;
+      }
+      to { 
+        transform: translate(-50%, -50%); 
+        opacity: 1;
+      }
+    }
+
+    /* Overlay oscuro para game over */
+    #game-over-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 9998;
+      backdrop-filter: blur(3px);
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Animaciones */
+    @keyframes hudEntrada {
+      from { transform: translateX(-20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes cameraEntrada {
+      from { transform: translateX(20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes gestoEntrada {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    /* Mensaje de combo */
+    .combo-popup {
+      position: fixed;
+      left: 50%;
+      top: 40%;
+      transform: translate(-50%, -50%);
+      background: rgba(102,217,255,0.15);
+      color: #66d9ff;
+      padding: 15px 25px;
+      border-radius: 20px;
+      font-size: 24px;
+      font-weight: 700;
+      pointer-events: none;
+      animation: comboPopup 0.8s ease-out forwards;
+      text-shadow: 0 0 10px rgba(102,217,255,0.8);
+      backdrop-filter: blur(4px);
+    }
+
+    @keyframes comboPopup {
+      0% { transform: translate(-50%, -30%); opacity: 0; }
+      20% { transform: translate(-50%, -50%); opacity: 1; }
+      80% { transform: translate(-50%, -50%); opacity: 1; }
+      100% { transform: translate(-50%, -70%); opacity: 0; }
+    }
+  </style>
+
+    <!-- A-Frame desde CDN -->
+    <!-- Sistema de Audio (lazy) -->
+    <audio id="sound-kill" src="{{ url_for('static', filename='sounds/kill_sound.mp3') }}" preload="none"></audio>
+    <audio id="sound-death" src="{{ url_for('static', filename='sounds/death_sound.mp3') }}" preload="none"></audio>
+    <audio id="sound-gameover" src="{{ url_for('static', filename='sounds/game_over.mp3') }}" preload="none"></audio>
+
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+</head>
+
+<body>
+  <!-- Cámara UI -->
+  <div id="camera-ui">
+    <div class="label">📷 Cámara de Gestos</div>
+    <img id="videoFeed" alt="Video en vivo">
+    <div id="gesto-actual">👋 Realiza un gesto...</div>
+  </div>
+
+  <!-- HUD usuario -->
+  <div id="hud">
+    <div id="hud-score">🎯 Puntuación: 0</div>
+    <div id="hud-lives">❤️ Vidas: 3</div>
+    <div id="hud-combo">🔥 Combo: x1</div>
+  </div>
+
+  <!-- Tarjeta moderna para el gesto objetivo de minicubos -->
+  <div id="mini-gesture-card" class="hidden" aria-live="polite">
+    <div class="icon">🤚</div>
+    <div class="text" id="mini-gesture-text">—</div>
+  </div>
+
+  <!-- Escena 3D -->
+  <a-scene id="scene" embedded renderer="antialias: true; colorManagement: true;">
+    <a-assets id="assets">
+      <!-- Precarga de modelos críticos -->
+      <a-asset-item id="butter-robot" src="/static/sprites/assets/Butter Robot.glb"></a-asset-item>
+      <a-asset-item id="generator-model" src="/static/sprites/assets/generator.glb"></a-asset-item>
+      <a-asset-item id="tree-model" src="/static/sprites/assets/Tree.glb"></a-asset-item>
+      <a-asset-item id="tree-var1" src="/static/sprites/assets/Tree (1).glb"></a-asset-item>
+      <a-asset-item id="rocks-model" src="/static/sprites/assets/Rocks.glb"></a-asset-item>
+      <a-asset-item id="rocks-var1" src="/static/sprites/assets/Rocks (1).glb"></a-asset-item>
+      <a-asset-item id="rock-single" src="/static/sprites/assets/Rock.glb"></a-asset-item>
+      <a-asset-item id="grass-model" src="/static/sprites/assets/Grass.glb"></a-asset-item>
+      <a-asset-item id="clouds" src="/static/sprites/assets/Cloud Set.glb"></a-asset-item>
+    </a-assets>
+
+    <!-- Iluminación mejorada -->
+    <a-entity light="type: ambient; color: #bbb; intensity: 0.6"></a-entity>
+    <a-entity light="type: directional; color: #fff; intensity: 0.8; castShadow: true" position="1 3 1"></a-entity>
+    <a-entity light="type: spot; color: #66d9ff; intensity: 0.5; angle: 45" position="0 4 0"></a-entity>
+
+    <!-- Ambiente -->
+    <a-sky color="#87CEEB"></a-sky>
+    
+    <!-- Suelo con textura de hierba -->
+    <a-plane position="0 0 -4" rotation="-90 0 0" width="100" height="100" 
+             material="shader: standard; color: #90EE90; roughness: 0.8; 
+                      repeat: 100 100">
+    </a-plane>
+
+    <!-- Línea roja de pérdida de vida -->
+    <a-entity id="death-line" position="0 0.1 2">
+      <a-box width="30" height="0.1" depth="0.1" 
+             material="shader: standard; color: #FF0000; emissive: #FF0000; emissiveIntensity: 0.5; transparent: true; opacity: 0.7">
+      </a-box>
+      <!-- Efecto de brillo para la línea -->
+      <a-plane width="30" height="0.3" rotation="-90 0 0"
+               material="shader: flat; color: #FF0000; transparent: true; opacity: 0.2"
+               animation="property: scale; from: 1 1 1; to: 1.2 1 1.2; dir: alternate; dur: 1000; loop: true">
+      </a-plane>
+    </a-entity>
+
+
+    <!-- Montañas y formaciones rocosas principales -->
+    <a-entity position="-60 0 -60">
+      <a-entity gltf-model="#rocks-model" scale="6 6 6" rotation="0 20 0"></a-entity>
+    </a-entity>
+    <a-entity position="60 0 -60">
+      <a-entity gltf-model="#rocks-var1" scale="5.5 5.5 5.5" rotation="0 -30 0"></a-entity>
+    </a-entity>
+    <a-entity position="0 0 -70">
+      <a-entity gltf-model="#rocks-model" scale="7 7 7" rotation="0 0 0"></a-entity>
+    </a-entity>
+
+    <!-- Árboles principales -->
+    <a-entity position="-25 0 -18">
+      <a-entity gltf-model="#tree-model" scale="2 2 2" rotation="0 20 0"></a-entity>
+    </a-entity>
+    <a-entity position="25 0 -18">
+      <a-entity gltf-model="#tree-var1" scale="1.8 1.8 1.8" rotation="0 -15 0"></a-entity>
+    </a-entity>
+
+    <!-- Árboles adicionales y rocas decorativas -->
+    <a-entity position="-35 0 -28">
+      <a-entity gltf-model="#tree-var1" scale="1.6 1.6 1.6" rotation="0 85 0"></a-entity>
+    </a-entity>
+    <a-entity position="38 0 -25">
+      <a-entity gltf-model="#tree-model" scale="1.4 1.4 1.4" rotation="0 -45 0"></a-entity>
+    </a-entity>
+
+    <!-- Rocas individuales y formaciones pequeñas -->
+    <a-entity position="-10 0 -22">
+      <a-entity gltf-model="#rock-single" scale="1.2 1.2 1.2" rotation="0 120 0"></a-entity>
+    </a-entity>
+    <a-entity position="10 0 -25">
+      <a-entity gltf-model="#rocks-var1" scale="0.7 0.7 0.7" rotation="0 45 0"></a-entity>
+    </a-entity>
+    <a-entity position="-42 0 -35">
+      <a-entity gltf-model="#rock-single" scale="1.5 1.5 1.5" rotation="0 -60 0"></a-entity>
+    </a-entity>
+    <a-entity position="45 0 -38">
+      <a-entity gltf-model="#rocks-model" scale="0.9 0.9 0.9" rotation="0 180 0"></a-entity>
+    </a-entity>
+
+    <!-- Parches de hierba -->
+    <a-entity position="0 0 -30">
+      <a-entity gltf-model="#grass-model" scale="1.5 1.5 1.5"></a-entity>
+    </a-entity>
+    <a-entity position="-15 0 -28">
+      <a-entity gltf-model="#grass-model" scale="1.2 1.2 1.2" rotation="0 45 0"></a-entity>
+    </a-entity>
+    <a-entity position="18 0 -32">
+      <a-entity gltf-model="#grass-model" scale="1.3 1.3 1.3" rotation="0 -30 0"></a-entity>
+    </a-entity>
+
+    <!-- Sistema de nubes -->
+    <a-entity position="-20 18 -25">
+      <a-entity gltf-model="#clouds" scale="3 3 3" rotation="0 10 0"></a-entity>
+    </a-entity>
+    <a-entity position="18 20 -28">
+      <a-entity gltf-model="#clouds" scale="2.6 2.6 2.6" rotation="0 -10 0"></a-entity>
+    </a-entity>
+    <a-entity position="0 22 -35">
+      <a-entity gltf-model="#clouds" scale="2.8 2.8 2.8" rotation="0 180 0"></a-entity>
+    </a-entity>
+    <a-entity position="-35 19 -40">
+      <a-entity gltf-model="#clouds" scale="2.2 2.2 2.2" rotation="0 45 0"></a-entity>
+    </a-entity>
+    <a-entity position="32 21 -38">
+      <a-entity gltf-model="#clouds" scale="2.4 2.4 2.4" rotation="0 -45 0"></a-entity>
+    </a-entity>
+
+    <!-- Flores aleatorias en el suelo -->
+    <a-entity id="flowers"></a-entity>
+    <script>
+      // Generar flores aleatorias
+      const flowers = document.getElementById('flowers');
+      for(let i = 0; i < 30; i++) {
+        const x = (Math.random() - 0.5) * 80;
+        const z = (Math.random() - 0.5) * 80 - 4;
+        // Evitar área de juego y caminos de spawn de minicubos
+        if ((Math.abs(x) < 20 && z > -40 && z < 5) || // camino central
+            (Math.abs(x - 15) < 10 && z > -40 && z < 5) || // camino derecho
+            (Math.abs(x + 15) < 10 && z > -40 && z < 5)) continue; // camino izquierdo
+        const flower = document.createElement('a-entity');
+        flower.setAttribute('position', `${x} 0.1 ${z}`);
+        const color = ['#FFB6C1', '#FF69B4', '#FFA07A', '#98FB98'][Math.floor(Math.random() * 4)];
+        flower.innerHTML = `
+          <a-cylinder color="#228B22" height="0.3" radius="0.02"></a-cylinder>
+          <a-sphere position="0 0.3 0" color="${color}" radius="0.08"></a-sphere>
+        `;
+        flowers.appendChild(flower);
+      }
+    </script>
+
+    <!-- Player invisible pero funcional para la lógica del juego -->
+    <a-entity id="player" position="0 1.5 -3">
+      <a-sphere radius="0.1" visible="false"></a-sphere>
+    </a-entity>
+
+    <!-- Cámara con movimiento suave -->
+    <a-entity position="0 2.5 6">
+      <a-camera wasd-controls="enabled: false"
+                look-controls="smoothingFactor: 0.2"
+                position="0 0 0"
+                animation="property: position; from: 0 0 0; to: 0 0.05 0; dir: alternate; dur: 2000; easing: easeInOutSine; loop: true">
+      </a-camera>
+    </a-entity>
+  </a-scene>
+
+  <!-- Game Over Menu -->
+  <div id="game-over-overlay"></div>
+  <div id="game-over-menu">
+    <img src="/static/sprites/img/image.png" alt="Game Over" class="game-over-image">
+    <h2>¡Game Over!</h2>
+    <div class="score">Puntuación final: <span id="final-score">0</span></div>
+    <div class="buttons">
+      <button onclick="window.location.href='/'">Volver al Menú</button>
+      <button onclick="window.location.reload()">Reintentar</button>
     </div>
+  </div>
 
-    <!-- HUD de información -->
-    <div id="hud">
-      <div id="hud-text">Detectando gestos...</div>
-      <div id="hud-score">Puntaje: 0</div>
-    </div>
+  <!-- Scripts del juego -->
+  <script src="{{ url_for('static', filename='js/gestures.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/hud.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/enemies.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/assets-loader.js') }}"></script>
 
-    <!-- Escenario 3D -->
-    <a-scene id="scene" cursor="rayOrigin: mouse" raycaster="objects: .target">
-      <a-entity light="type: ambient; intensity: 0.6"></a-entity>
-      <a-entity light="type: directional; intensity: 0.9" position="2 4 -3"></a-entity>
+  <!-- Debug helper y animaciones -->
+  <script>
+    // Función para mostrar combos
+    function showCombo(count) {
+      const popup = document.createElement('div');
+      popup.className = 'combo-popup';
+      popup.textContent = `¡Combo x${count}! 🔥`;
+      document.body.appendChild(popup);
+      setTimeout(() => popup.remove(), 800);
+    }
 
-      <a-sky color="#050505"></a-sky>
-      <a-plane position="0 0 -4" rotation="-90 0 0" width="25" height="25" color="#0a0a0a"></a-plane>
+    // Debug y verificación A-Frame
+    (function(){
+      function logAndMark() {
+        console.log('DEBUG - typeof AFRAME =', typeof window.AFRAME);
+        const scene = document.querySelector('a-scene');
+        console.log('DEBUG - a-scene element:', !!scene);
+        if (!window.AFRAME || !scene) return;
+        if (scene.hasLoaded) {
+          console.log('DEBUG - a-scene hasLoaded = true');
+          addDebugMarker();
+        } else {
+          scene.addEventListener('loaded', addDebugMarker);
+          console.log('DEBUG - esperando evento loaded de a-scene');
+        }
+      }
 
-      <a-box id="player-box" position="0 1.5 -3" rotation="0 45 0" color="#00ffff"
-             animation="property: rotation; to: 0 405 0; loop: true; dur: 4000"></a-box>
+      function addDebugMarker() {
+        try {
+        if (document.getElementById('debug-marker')) return;
+        const marker = document.createElement('a-box');
+        marker.id = 'debug-marker';
+        // placeholder simple para el generator; el modelo real se cargará de forma diferida
+        marker.setAttribute('position','0 3 -3');
+        marker.setAttribute('width','0.5');
+        marker.setAttribute('height','0.5');
+        marker.setAttribute('depth','0.5');
+        marker.setAttribute('material', 'shader: standard; color: #ff00ff; emissive: #ff00ff; emissiveIntensity: 0.3; metalness: 0.7; roughness: 0.3');
+        marker.setAttribute('animation','property: rotation; to: 0 360 0; loop: true; dur: 4000');
+        // marcar data-src para que el loader pueda aplicar el modelo glb más tarde
+        marker.setAttribute('data-model-src', '/static/sprites/assets/generator.glb');
+        const scene = document.querySelector('a-scene');
+        scene.appendChild(marker);
+              // Dibujar una línea tenue desde el marker hacia la línea roja (z = 2)
+              try {
+                const pos = marker.getAttribute('position');
+                const markerZ = (pos && pos.z) ? pos.z : -3;
+                const length = Math.max(0.1, 2 - markerZ);
+                const midZ = markerZ + (length / 2);
+                const line = document.createElement('a-cylinder');
+                line.id = 'marker-line';
+                line.setAttribute('position', `${pos.x || 0} 0.5 ${midZ}`);
+                line.setAttribute('height', `${length}`);
+                line.setAttribute('radius', '0.02');
+                line.setAttribute('rotation', '90 0 0');
+                line.setAttribute('color', '#ff99ff');
+                line.setAttribute('opacity', '0.25');
+                line.setAttribute('material', 'transparent: true;');
+                scene.appendChild(line);
+              } catch (e) {
+                // no crítico si no se puede dibujar la línea
+              }
+          console.log('DEBUG - marker añadido a la escena');
+        } catch (e) {
+          console.error('DEBUG - no se pudo añadir marker', e);
+        }
+      }
 
-      <a-entity position="0 1.6 0"><a-camera></a-camera></a-entity>
-    </a-scene>
-
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
-  </body>
+      setTimeout(logAndMark, 300);
+    })();
+  </script>
+</body>
 </html>

@@ -1,0 +1,24 @@
+#camera-ui {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  text-align: center;
+  background: rgba(45,45,45,0.95);
+  padding: 10px;
+  border-radius: 12px;
+  border: 3px solid #242424;
+  z-index: 999;
+}
+#camera-ui img {
+  width: 220px;
+  height: 165px;
+  border-radius: 8px;
+  border: 2px solid #242424;
+  object-fit: contain;
+  background: black;
+}
+#gesto-actual {
+  margin-top: 8px;
+  color: #00ffff;
+  font-weight: 600;
+}

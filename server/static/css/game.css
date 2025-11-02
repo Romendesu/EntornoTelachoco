@@ -1,0 +1,31 @@
+a-scene {
+    width: 100vw;
+    height: 100vh;
+}
+
+/* asegurar que la escena esté detrás del HUD pero visible */
+a-scene {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    display: block;
+}
+
+/* A-Frame inserta un <canvas> dentro de la escena; asegurar que el canvas ocupe la pantalla
+   y no quede oculto por reglas heredadas del proyecto. Usar !important para evitar
+   estilos externos que reduzcan tamaño/visibilidad. */
+a-scene canvas, a-scene .a-canvas {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 1 !important;
+    display: block !important;
+}
+
+.label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
