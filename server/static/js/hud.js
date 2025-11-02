@@ -1,6 +1,9 @@
 // hud.js
 let score = 0;
 let lives = 3;
+let comboCount = 1;
+let lastKillTime = 0;
+const COMBO_TIMEOUT = 4000; // 4 segundos para mantener el combo
 
 // Sistema de sonido
 function playSound(id) {
@@ -26,23 +29,49 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function sumarPuntaje(p) {
-  score += p;
-  const el = document.getElementById("hud-score");
-  if (el) el.textContent = `Puntaje: ${score}`;
+  // Verificar el tiempo desde la última eliminación para el combo
+  const now = Date.now();
+  if (now - lastKillTime <= COMBO_TIMEOUT) {
+    comboCount++;
+    showCombo(comboCount);
+  } else {
+    comboCount = 1;
+  }
+  lastKillTime = now;
+
+  // Aplicar multiplicador de combo a los puntos
+  const puntos = p * comboCount;
+  score += puntos;
+  
+  // Actualizar HUD
+  const scoreEl = document.getElementById("hud-score");
+  const comboEl = document.getElementById("hud-combo");
+  if (scoreEl) scoreEl.textContent = `🎯 Puntuación: ${score}`;
+  if (comboEl) {
+    comboEl.textContent = `🔥 Combo: x${comboCount}`;
+    // Añadir clase active para la animación
+    comboEl.classList.add('active');
+    // Remover la clase después de la animación
+    setTimeout(() => comboEl.classList.remove('active'), 500);
+  }
+  
+  playSound("sound-kill");
 }
 
 function perderVida() {
   lives--;
-  const el = document.getElementById("hud-lives");
-  if (el) el.textContent = `❤️ Vidas: ${lives}`;
-  // Reproducir sonido de daño
-  playSound('sound-death');
-  // breve feedback visual
-  const hud = document.getElementById("hud");
-  if (hud) {
-    hud.style.transform = "scale(0.98)";
-    setTimeout(() => hud.style.transform = "", 150);
-  }
+  // Reiniciar combo al perder una vida
+  comboCount = 1;
+  lastKillTime = 0;
+  
+  // Actualizar HUD
+  const livesEl = document.getElementById("hud-lives");
+  const comboEl = document.getElementById("hud-combo");
+  if (livesEl) livesEl.textContent = `❤️ Vidas: ${lives}`;
+  if (comboEl) comboEl.textContent = `🔥 Combo: x${comboCount}`;
+  
+  playSound("sound-death");
+  
   if (lives <= 0) {
     showGameOver();
   }

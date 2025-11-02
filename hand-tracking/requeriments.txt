@@ -1,2 +1,8 @@
 opencv-python
 mediapipe
+numpy
+scikit-learn
+joblib
+requests
+flask
+pillow

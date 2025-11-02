@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minijuego de Gestos 3D</title>
+  <title>Te-La-Choco Videojuego</title>
 
   <!-- Estilos críticos inline -->
   <style>
@@ -63,6 +63,20 @@
     #hud-combo {
       color: #66d9ff;
       font-size: 0.9em;
+      transition: transform 0.2s ease, color 0.3s ease;
+      position: relative;
+    }
+    
+    #hud-combo.active {
+      transform: scale(1.2);
+      color: #ff6b6b;
+      animation: comboFlash 0.5s ease-out;
+    }
+
+    @keyframes comboFlash {
+      0% { transform: scale(1); color: #66d9ff; }
+      50% { transform: scale(1.3); color: #ff6b6b; }
+      100% { transform: scale(1.2); color: #ff9f43; }
     }
 
     /* Tarjeta moderna para el gesto del minicubo */
@@ -271,23 +285,25 @@
       left: 50%;
       top: 40%;
       transform: translate(-50%, -50%);
-      background: rgba(102,217,255,0.15);
-      color: #66d9ff;
+      background: rgba(255, 165, 0, 0.25);
+      color: #ffd700;
       padding: 15px 25px;
       border-radius: 20px;
-      font-size: 24px;
+      font-size: 32px;
       font-weight: 700;
       pointer-events: none;
-      animation: comboPopup 0.8s ease-out forwards;
-      text-shadow: 0 0 10px rgba(102,217,255,0.8);
+      animation: comboPopup 1.2s ease-out forwards;
+      text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
       backdrop-filter: blur(4px);
+      border: 2px solid rgba(255, 215, 0, 0.3);
+      box-shadow: 0 0 20px rgba(255, 165, 0, 0.4);
     }
 
     @keyframes comboPopup {
-      0% { transform: translate(-50%, -30%); opacity: 0; }
-      20% { transform: translate(-50%, -50%); opacity: 1; }
-      80% { transform: translate(-50%, -50%); opacity: 1; }
-      100% { transform: translate(-50%, -70%); opacity: 0; }
+      0% { transform: translate(-50%, -30%) scale(0.8); opacity: 0; }
+      20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+      80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      100% { transform: translate(-50%, -70%) scale(0.9); opacity: 0; }
     }
   </style>
 
@@ -324,31 +340,222 @@
   <!-- Escena 3D -->
   <a-scene id="scene" embedded renderer="antialias: true; colorManagement: true;">
     <a-assets id="assets">
-      <!-- Precarga de modelos críticos -->
+      <!-- Solo mantenemos el modelo del enemigo -->
       <a-asset-item id="butter-robot" src="/static/sprites/assets/Butter Robot.glb"></a-asset-item>
-      <a-asset-item id="generator-model" src="/static/sprites/assets/generator.glb"></a-asset-item>
-      <a-asset-item id="tree-model" src="/static/sprites/assets/Tree.glb"></a-asset-item>
-      <a-asset-item id="tree-var1" src="/static/sprites/assets/Tree (1).glb"></a-asset-item>
-      <a-asset-item id="rocks-model" src="/static/sprites/assets/Rocks.glb"></a-asset-item>
-      <a-asset-item id="rocks-var1" src="/static/sprites/assets/Rocks (1).glb"></a-asset-item>
-      <a-asset-item id="rock-single" src="/static/sprites/assets/Rock.glb"></a-asset-item>
-      <a-asset-item id="grass-model" src="/static/sprites/assets/Grass.glb"></a-asset-item>
-      <a-asset-item id="clouds" src="/static/sprites/assets/Cloud Set.glb"></a-asset-item>
     </a-assets>
 
     <!-- Iluminación mejorada -->
-    <a-entity light="type: ambient; color: #bbb; intensity: 0.6"></a-entity>
-    <a-entity light="type: directional; color: #fff; intensity: 0.8; castShadow: true" position="1 3 1"></a-entity>
-    <a-entity light="type: spot; color: #66d9ff; intensity: 0.5; angle: 45" position="0 4 0"></a-entity>
+    <a-entity light="type: ambient; color: #FFE8D6; intensity: 0.5"></a-entity>
+    <a-entity light="type: directional; color: #FFB830; intensity: 1.4; castShadow: true" position="-1 4 1"></a-entity>
+    <a-entity light="type: hemisphere; color: #87CEEB; groundColor: #47624F; intensity: 0.7"></a-entity>
+    <a-entity light="type: spot; color: #FFD700; intensity: 0.4; angle: 45" position="0 5 0"></a-entity>
 
-    <!-- Ambiente -->
-    <a-sky color="#87CEEB"></a-sky>
+    <!-- Cielo dinámico -->
+    <a-sky color="#6BB7E8">
+        <a-animation attribute="color" from="#6BB7E8" to="#87CEEB" dur="10000" direction="alternate" repeat="indefinite"></a-animation>
+    </a-sky>
     
-    <!-- Suelo con textura de hierba -->
+    <!-- Suelo base -->
     <a-plane position="0 0 -4" rotation="-90 0 0" width="100" height="100" 
-             material="shader: standard; color: #90EE90; roughness: 0.8; 
-                      repeat: 100 100">
+            material="shader: standard; color: #7CB342; roughness: 0.9; metalness: 0.1; repeat: 100 100">
     </a-plane>
+
+    <!-- Decoraciones del entorno Low Poly -->
+    <a-entity id="environment-decorations">
+        <!-- Árboles Low Poly -->
+        <a-entity class="low-poly-tree" position="-25 0 -20">
+            <!-- Tronco -->
+            <a-cylinder color="#8D6E63" height="3" radius="0.3" segments-radial="6"
+                       material="roughness: 0.9; metalness: 0.1"></a-cylinder>
+            <!-- Copa -->
+            <a-cone color="#2E7D32" height="4" radius-bottom="2" radius-top="0" segments-radial="6"
+                   position="0 3.5 0" material="roughness: 0.8; metalness: 0.1"></a-cone>
+        </a-entity>
+
+        <a-entity class="low-poly-tree" position="-15 0 -25">
+            <a-cylinder color="#8D6E63" height="2.5" radius="0.25" segments-radial="6"
+                       material="roughness: 0.9; metalness: 0.1"></a-cylinder>
+            <a-cone color="#388E3C" height="3.5" radius-bottom="1.8" radius-top="0" segments-radial="6"
+                   position="0 3 0" material="roughness: 0.8; metalness: 0.1"></a-cone>
+        </a-entity>
+
+        <a-entity class="low-poly-tree" position="20 0 -15">
+            <a-cylinder color="#8D6E63" height="3.2" radius="0.35" segments-radial="6"
+                       material="roughness: 0.9; metalness: 0.1"></a-cylinder>
+            <a-cone color="#1B5E20" height="4.2" radius-bottom="2.2" radius-top="0" segments-radial="6"
+                   position="0 3.7 0" material="roughness: 0.8; metalness: 0.1"></a-cone>
+        </a-entity>
+
+        <!-- Montañas Low Poly -->
+        <a-entity class="low-poly-mountain" position="-30 0 -35">
+            <a-cone color="#757575" height="12" radius-bottom="8" radius-top="0" segments-radial="5"
+                   material="roughness: 0.95; metalness: 0.05"></a-cone>
+            <!-- Nieve en la cima -->
+            <a-cone color="#EEEEEE" height="3" radius-bottom="2.5" radius-top="0" segments-radial="5"
+                   position="0 9 0" material="roughness: 0.8; metalness: 0.2"></a-cone>
+        </a-entity>
+
+        <a-entity class="low-poly-mountain" position="35 0 -40">
+            <a-cone color="#616161" height="15" radius-bottom="10" radius-top="0" segments-radial="5"
+                   material="roughness: 0.95; metalness: 0.05"></a-cone>
+            <a-cone color="#FAFAFA" height="4" radius-bottom="3" radius-top="0" segments-radial="5"
+                   position="0 11 0" material="roughness: 0.8; metalness: 0.2"></a-cone>
+        </a-entity>
+
+        <!-- Árboles adicionales -->
+        <a-entity class="low-poly-tree" position="-40 0 -15">
+            <a-cylinder color="#8D6E63" height="2.8" radius="0.3" segments-radial="6"
+                       material="roughness: 0.9; metalness: 0.1"></a-cylinder>
+            <a-cone color="#388E3C" height="3.8" radius-bottom="1.9" radius-top="0" segments-radial="6"
+                   position="0 3.3 0" material="roughness: 0.8; metalness: 0.1"></a-cone>
+        </a-entity>
+
+        <a-entity class="low-poly-tree" position="30 0 -25">
+            <a-cylinder color="#8D6E63" height="3" radius="0.28" segments-radial="6"
+                       material="roughness: 0.9; metalness: 0.1"></a-cylinder>
+            <a-cone color="#2E7D32" height="4" radius-bottom="2" radius-top="0" segments-radial="6"
+                   position="0 3.5 0" material="roughness: 0.8; metalness: 0.1"></a-cone>
+        </a-entity>
+
+        <!-- Montañas adicionales -->
+        <a-entity class="low-poly-mountain" position="0 0 -45">
+            <a-cone color="#616161" height="18" radius-bottom="12" radius-top="0" segments-radial="5"
+                   material="roughness: 0.95; metalness: 0.05"></a-cone>
+            <a-cone color="#FAFAFA" height="5" radius-bottom="3.5" radius-top="0" segments-radial="5"
+                   position="0 13 0" material="roughness: 0.8; metalness: 0.2"></a-cone>
+        </a-entity>
+
+        <!-- Script para generar elementos aleatorios -->
+        <script>
+            function randomRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            const scene = document.querySelector('a-scene');
+            const safeZone = {
+                minX: -45,
+                maxX: 45,
+                minZ: -45,
+                maxZ: -10
+            };
+
+            // Generar 10 árboles adicionales
+            for (let i = 0; i < 10; i++) {
+                const tree = document.createElement('a-entity');
+                const x = randomRange(safeZone.minX, safeZone.maxX);
+                const z = randomRange(safeZone.minZ, safeZone.maxZ);
+                tree.innerHTML = `
+                    <a-cylinder color="#8D6E63" height="${randomRange(2, 3.5)}" radius="${randomRange(0.25, 0.35)}" segments-radial="6"
+                               material="roughness: 0.9; metalness: 0.1"></a-cylinder>
+                    <a-cone color="#${['2E7D32', '388E3C', '1B5E20'][Math.floor(Math.random() * 3)]}" 
+                           height="${randomRange(3, 4.5)}" radius-bottom="${randomRange(1.8, 2.3)}" radius-top="0" segments-radial="6"
+                           position="0 ${randomRange(3, 4)} 0" material="roughness: 0.8; metalness: 0.1"></a-cone>
+                `;
+                tree.setAttribute('position', `${x} 0 ${z}`);
+                tree.setAttribute('rotation', `0 ${randomRange(0, 360)} 0`);
+                scene.appendChild(tree);
+            }
+
+            // Generar 10 montañas adicionales
+            for (let i = 0; i < 10; i++) {
+                const mountain = document.createElement('a-entity');
+                const x = randomRange(safeZone.minX, safeZone.maxX);
+                const z = randomRange(safeZone.minZ, safeZone.maxZ);
+                const height = randomRange(10, 20);
+                mountain.innerHTML = `
+                    <a-cone color="#${['757575', '616161', '424242'][Math.floor(Math.random() * 3)]}" 
+                           height="${height}" radius-bottom="${randomRange(6, 12)}" radius-top="0" segments-radial="5"
+                           material="roughness: 0.95; metalness: 0.05"></a-cone>
+                    <a-cone color="#FAFAFA" height="${height * 0.25}" radius-bottom="${randomRange(2, 4)}" radius-top="0" segments-radial="5"
+                           position="0 ${height * 0.75} 0" material="roughness: 0.8; metalness: 0.2"></a-cone>
+                `;
+                mountain.setAttribute('position', `${x} 0 ${z}`);
+                mountain.setAttribute('rotation', `0 ${randomRange(0, 360)} 0`);
+                scene.appendChild(mountain);
+            }
+
+            // Generar decoraciones en el fondo (vista inicial del usuario)
+            const backDecorations = [
+                // Cristales flotantes
+                {
+                    type: 'crystal',
+                    count: 5,
+                    create: () => {
+                        const crystal = document.createElement('a-entity');
+                        const height = randomRange(3, 6);
+                        const color = ['#B3E5FC', '#81D4FA', '#4FC3F7'][Math.floor(Math.random() * 3)];
+                        crystal.innerHTML = `
+                            <a-cone color="${color}" height="${height}" radius-bottom="${randomRange(0.8, 1.5)}" 
+                                   radius-top="0.1" segments-radial="6" material="roughness: 0.2; metalness: 0.8">
+                                <a-animation attribute="rotation" from="0 0 0" to="0 360 0" 
+                                           dur="${randomRange(20000, 30000)}" repeat="indefinite" easing="linear">
+                                </a-animation>
+                            </a-cone>
+                        `;
+                        return crystal;
+                    }
+                },
+                // Rocas low poly
+                {
+                    type: 'rock',
+                    count: 8,
+                    create: () => {
+                        const rock = document.createElement('a-entity');
+                        const scale = randomRange(0.5, 2);
+                        const color = ['#616161', '#757575', '#9E9E9E'][Math.floor(Math.random() * 3)];
+                        rock.innerHTML = `
+                            <a-dodecahedron color="${color}" radius="${scale}"
+                                          material="roughness: 0.9; metalness: 0.1"
+                                          animation="property: rotation; to: 0 360 0; loop: true; dur: ${randomRange(30000, 40000)}">
+                            </a-dodecahedron>
+                        `;
+                        return rock;
+                    }
+                },
+                // Flores low poly
+                {
+                    type: 'flower',
+                    count: 12,
+                    create: () => {
+                        const flower = document.createElement('a-entity');
+                        const height = randomRange(0.3, 0.8);
+                        const color = ['#E91E63', '#F06292', '#FF4081'][Math.floor(Math.random() * 3)];
+                        flower.innerHTML = `
+                            <a-cylinder color="#4CAF50" height="${height}" radius="0.05" segments-radial="4"
+                                      material="roughness: 0.8; metalness: 0.1"></a-cylinder>
+                            <a-cone color="${color}" height="0.2" radius-bottom="0.2" radius-top="0" segments-radial="4"
+                                   position="0 ${height + 0.1} 0" material="roughness: 0.7; metalness: 0.2">
+                                <a-animation attribute="rotation" from="0 0 0" to="0 360 0" 
+                                           dur="5000" repeat="indefinite" easing="linear"></a-animation>
+                            </a-cone>
+                        `;
+                        return flower;
+                    }
+                }
+            ];
+
+            // Zona específica para decoraciones del fondo
+            const backZone = {
+                minX: -50,
+                maxX: 50,
+                minZ: -60,
+                maxZ: -40
+            };
+
+            // Generar cada tipo de decoración
+            backDecorations.forEach(decoration => {
+                for (let i = 0; i < decoration.count; i++) {
+                    const element = decoration.create();
+                    const x = randomRange(backZone.minX, backZone.maxX);
+                    const z = randomRange(backZone.minZ, backZone.maxZ);
+                    const y = decoration.type === 'crystal' ? randomRange(2, 8) : 0;
+                    element.setAttribute('position', `${x} ${y} ${z}`);
+                    element.setAttribute('rotation', `0 ${randomRange(0, 360)} 0`);
+                    scene.appendChild(element);
+                }
+            });
+        </script>
+    </a-entity>
 
     <!-- Línea roja de pérdida de vida -->
     <a-entity id="death-line" position="0 0.1 2">
@@ -363,41 +570,343 @@
     </a-entity>
 
 
-    <!-- Montañas y formaciones rocosas principales -->
-    <a-entity position="-60 0 -60">
-      <a-entity gltf-model="#rocks-model" scale="6 6 6" rotation="0 20 0"></a-entity>
-    </a-entity>
-    <a-entity position="60 0 -60">
-      <a-entity gltf-model="#rocks-var1" scale="5.5 5.5 5.5" rotation="0 -30 0"></a-entity>
-    </a-entity>
-    <a-entity position="0 0 -70">
-      <a-entity gltf-model="#rocks-model" scale="7 7 7" rotation="0 0 0"></a-entity>
+    <!-- Sistema de nubes dinámicas mejorado y expandido -->
+    <a-entity id="cloud-system">
+        <!-- Capa superior de nubes -->
+        <a-entity position="0 50 -50">
+            <a-entity gltf-model="#clouds" scale="4.5 4.5 4.5" rotation="0 0 0">
+                <a-animation attribute="position" from="-120 0 0" to="120 0 0" dur="150000" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <!-- Capa media de nubes -->
+        <a-entity position="0 40 -40">
+            <a-entity gltf-model="#clouds" scale="3.5 3.5 3.5" rotation="0 45 0">
+                <a-animation attribute="position" from="-100 0 0" to="100 0 0" dur="180000" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <!-- Nubes bajas y cercanas -->
+        <a-entity position="0 25 -30">
+            <a-entity gltf-model="#clouds" scale="2.5 2.5 2.5" rotation="0 180 0">
+                <a-animation attribute="position" from="-90 0 0" to="90 0 0" dur="160000" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <!-- Nubes decorativas laterales -->
+        <a-entity position="-40 30 -35">
+            <a-entity gltf-model="#clouds" scale="2 2 2" rotation="0 30 0">
+                <a-animation attribute="position" from="0 0 0" to="0 2 0" dur="8000" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <a-entity position="40 28 -35">
+            <a-entity gltf-model="#clouds" scale="1.8 1.8 1.8" rotation="0 -30 0">
+                <a-animation attribute="position" from="0 0 0" to="0 2 0" dur="9000" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
     </a-entity>
 
-    <!-- Árboles principales -->
-    <a-entity position="-25 0 -18">
-      <a-entity gltf-model="#tree-model" scale="2 2 2" rotation="0 20 0"></a-entity>
-    </a-entity>
-    <a-entity position="25 0 -18">
-      <a-entity gltf-model="#tree-var1" scale="1.8 1.8 1.8" rotation="0 -15 0"></a-entity>
-    </a-entity>
-
-    <!-- Árboles adicionales y rocas decorativas -->
-    <a-entity position="-35 0 -28">
-      <a-entity gltf-model="#tree-var1" scale="1.6 1.6 1.6" rotation="0 85 0"></a-entity>
-    </a-entity>
-    <a-entity position="38 0 -25">
-      <a-entity gltf-model="#tree-model" scale="1.4 1.4 1.4" rotation="0 -45 0"></a-entity>
+        <!-- Rocas grandes en puntos de spawn de enemigos -->
+    <!-- Roca spawn izquierda -->
+    <a-entity position="-15 2 -15">
+        <a-entity gltf-model="#rocks-model" scale="4 4 4" rotation="0 45 0">
+            <a-animation attribute="rotation" from="0 45 0" to="0 405 0" dur="30000" repeat="indefinite" easing="linear"></a-animation>
+        </a-entity>
     </a-entity>
 
-    <!-- Rocas individuales y formaciones pequeñas -->
-    <a-entity position="-10 0 -22">
-      <a-entity gltf-model="#rock-single" scale="1.2 1.2 1.2" rotation="0 120 0"></a-entity>
+    <!-- Roca spawn central -->
+    <a-entity position="0 2 -15">
+        <a-entity gltf-model="#rocks-var1" scale="4 4 4" rotation="0 180 0">
+            <a-animation attribute="rotation" from="0 180 0" to="0 540 0" dur="30000" repeat="indefinite" easing="linear"></a-animation>
+        </a-entity>
     </a-entity>
-    <a-entity position="10 0 -25">
-      <a-entity gltf-model="#rocks-var1" scale="0.7 0.7 0.7" rotation="0 45 0"></a-entity>
+
+    <!-- Roca spawn derecha -->
+    <a-entity position="15 2 -15">
+        <a-entity gltf-model="#rocks-model" scale="4 4 4" rotation="0 270 0">
+            <a-animation attribute="rotation" from="0 270 0" to="0 630 0" dur="30000" repeat="indefinite" easing="linear"></a-animation>
+        </a-entity>
     </a-entity>
-    <a-entity position="-42 0 -35">
+
+    <!-- Formaciones rocosas adicionales -->
+    <a-entity id="additional-rocks">
+        <!-- Cluster izquierdo -->
+        <a-entity position="-35 0.5 -15">
+            <a-entity gltf-model="#rocks-var1" scale="3 3 3" rotation="0 120 0"></a-entity>
+        </a-entity>
+        <a-entity position="-40 0.5 -20">
+            <a-entity gltf-model="#rocks-model" scale="2.5 2.5 2.5" rotation="0 45 0"></a-entity>
+        </a-entity>
+        
+        <!-- Cluster derecho -->
+        <a-entity position="35 0.5 -15">
+            <a-entity gltf-model="#rocks-model" scale="3 3 3" rotation="0 -120 0"></a-entity>
+        </a-entity>
+        <a-entity position="40 0.5 -20">
+            <a-entity gltf-model="#rocks-var1" scale="2.5 2.5 2.5" rotation="0 -45 0"></a-entity>
+        </a-entity>
+        
+        <!-- Rocas dispersas -->
+        <a-entity position="-25 0.5 -25">
+            <a-entity gltf-model="#rock-single" scale="2 2 2" rotation="0 90 0"></a-entity>
+        </a-entity>
+        <a-entity position="25 0.5 -25">
+            <a-entity gltf-model="#rock-single" scale="2 2 2" rotation="0 -90 0"></a-entity>
+        </a-entity>
+    </a-entity>
+
+    <!-- Montañas de fondo para profundidad -->
+    <a-entity id="mountain-range-background">
+        <a-entity position="-40 0 -45">
+            <a-entity gltf-model="#rocks-model" scale="12 15 8" rotation="0 20 0">
+                <a-animation attribute="rotation" from="0 20 0" to="0 22 0" dur="40000" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <a-entity position="40 0 -45">
+            <a-entity gltf-model="#rocks-var1" scale="11 14 8" rotation="0 -20 0">
+                <a-animation attribute="rotation" from="0 -20 0" to="0 -22 0" dur="42000" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <a-entity position="0 0 -50">
+            <a-entity gltf-model="#rocks-model" scale="14 16 8" rotation="0 0 0">
+                <a-animation attribute="rotation" from="0 0 0" to="0 2 0" dur="45000" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+    </a-entity>
+
+    <!-- Detalles rocosos entre montañas -->
+    <a-entity id="mountain-details">
+        <!-- Izquierda -->
+        <a-entity position="-25 0 -35">
+            <a-entity gltf-model="#rock-single" scale="3 4 2" rotation="0 45 0"></a-entity>
+        </a-entity>
+        <!-- Centro -->
+        <a-entity position="0 0 -35">
+            <a-entity gltf-model="#rock-single" scale="3.5 4.5 2" rotation="0 0 0"></a-entity>
+        </a-entity>
+        <!-- Derecha -->
+        <a-entity position="25 0 -35">
+            <a-entity gltf-model="#rock-single" scale="3 4 2" rotation="0 -45 0"></a-entity>
+        </a-entity>
+    </a-entity>
+
+    <!-- Sistema forestal expandido -->
+    <!-- Bosque denso principal más cercano -->
+    <a-entity id="forest-main">
+        <!-- Árboles gigantes en primer plano -->
+        <a-entity position="-20 2 0">
+            <a-entity gltf-model="#tree-model" scale="3.5 4 3.5" rotation="0 20 0">
+                <a-animation attribute="rotation" from="0 20 0" to="0 22 1" dur="4000" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <a-entity position="20 2 0">
+            <a-entity gltf-model="#tree-var1" scale="3.2 3.8 3.2" rotation="0 -15 0">
+                <a-animation attribute="rotation" from="0 -15 0" to="0 -17 1" dur="4500" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+
+        <!-- Árboles pequeños en primer plano -->
+        <a-entity position="-28 2 3">
+            <a-entity gltf-model="#tree-model" scale="2.8 3.2 2.8" rotation="0 45 0">
+                <a-animation attribute="rotation" from="0 45 0" to="0 47 1" dur="4200" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <a-entity position="28 2 3">
+            <a-entity gltf-model="#tree-var1" scale="2.6 3 2.6" rotation="0 -45 0">
+                <a-animation attribute="rotation" from="0 -45 0" to="0 -47 1" dur="4300" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+
+        <!-- Grupos de árboles medianos cercanos -->
+        <a-entity position="-10 0.5 -20">
+            <a-entity gltf-model="#tree-model" scale="2.8 3.2 2.8" rotation="0 45 0">
+                <a-animation attribute="rotation" from="0 45 0" to="0 47 1" dur="5000" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <a-entity position="15 0.5 -18">
+            <a-entity gltf-model="#tree-var1" scale="2.6 3 2.6" rotation="0 -30 0">
+                <a-animation attribute="rotation" from="0 -30 0" to="0 -32 1" dur="4800" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+
+        <!-- Árboles de fondo cercanos -->
+        <a-entity position="-25 0 -25">
+            <a-entity gltf-model="#tree-model" scale="3 3.5 3" rotation="0 60 0">
+                <a-animation attribute="rotation" from="0 60 0" to="0 62 1" dur="5200" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <a-entity position="25 0 -25">
+            <a-entity gltf-model="#tree-var1" scale="2.8 3.3 2.8" rotation="0 -75 0">
+                <a-animation attribute="rotation" from="0 -75 0" to="0 -77 1" dur="5500" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+    </a-entity>
+
+    <!-- Bosques laterales expandidos -->
+    <a-entity id="forest-sides">
+        <!-- Grupo izquierdo -->
+        <a-entity position="-35 0 -20">
+            <a-entity gltf-model="#tree-var1" scale="2.4 2.8 2.4" rotation="0 85 0">
+                <a-animation attribute="rotation" from="0 85 0" to="0 87 1" dur="5000" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <a-entity position="-32 0 -23">
+            <a-entity gltf-model="#tree-model" scale="2.2 2.6 2.2" rotation="0 -45 0">
+                <a-animation attribute="rotation" from="0 -45 0" to="0 -47 1" dur="4800" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <a-entity position="-38 0 -25">
+            <a-entity gltf-model="#tree-var1" scale="2.5 2.9 2.5" rotation="0 120 0">
+                <a-animation attribute="rotation" from="0 120 0" to="0 122 1" dur="5200" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+
+        <!-- Grupo derecho -->
+        <a-entity position="35 0 -20">
+            <a-entity gltf-model="#tree-model" scale="2.3 2.7 2.3" rotation="0 -60 0">
+                <a-animation attribute="rotation" from="0 -60 0" to="0 -62 1" dur="5000" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <a-entity position="32 0 -23">
+            <a-entity gltf-model="#tree-var1" scale="2.6 3 2.6" rotation="0 30 0">
+                <a-animation attribute="rotation" from="0 30 0" to="0 32 1" dur="5300" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <a-entity position="38 0 -25">
+            <a-entity gltf-model="#tree-model" scale="2.4 2.8 2.4" rotation="0 -90 0">
+                <a-animation attribute="rotation" from="0 -90 0" to="0 -92 1" dur="5100" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+
+        <!-- Grupo central de fondo -->
+        <a-entity position="0 0 -30">
+            <a-entity gltf-model="#tree-var1" scale="2.7 3.1 2.7" rotation="0 0 0">
+                <a-animation attribute="rotation" from="0 0 0" to="0 2 1" dur="5400" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <a-entity position="-5 0 -32">
+            <a-entity gltf-model="#tree-model" scale="2.5 2.9 2.5" rotation="0 45 0">
+                <a-animation attribute="rotation" from="0 45 0" to="0 47 1" dur="5600" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <a-entity position="5 0 -32">
+            <a-entity gltf-model="#tree-var1" scale="2.6 3 2.6" rotation="0 -45 0">
+                <a-animation attribute="rotation" from="0 -45 0" to="0 -47 1" dur="5200" direction="alternate" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+    </a-entity>
+
+    <!-- Sistema de decoración del terreno expandido -->
+    <a-entity id="terrain-details">
+        <!-- Formaciones rocosas principales cercanas -->
+        <a-entity position="-12 0.5 -15">
+            <a-entity gltf-model="#rocks-var1" scale="2.2 2.2 2.2" rotation="0 120 0"></a-entity>
+        </a-entity>
+        <a-entity position="12 0.5 -15">
+            <a-entity gltf-model="#rocks-model" scale="1.8 1.8 1.8" rotation="0 45 0"></a-entity>
+        </a-entity>
+        
+        <!-- Rocas individuales cercanas -->
+        <a-entity position="-18 0.5 -12">
+            <a-entity gltf-model="#rock-single" scale="1.6 1.6 1.6" rotation="0 90 0"></a-entity>
+        </a-entity>
+        <a-entity position="18 0.5 -12">
+            <a-entity gltf-model="#rock-single" scale="1.4 1.4 1.4" rotation="0 180 0"></a-entity>
+        </a-entity>
+
+        <!-- Nuevas formaciones rocosas dispersas -->
+        <a-entity position="-45 0.5 -25">
+            <a-entity gltf-model="#rocks-model" scale="2.5 2.5 2.5" rotation="0 160 0"></a-entity>
+        </a-entity>
+        <a-entity position="45 0.5 -25">
+            <a-entity gltf-model="#rocks-var1" scale="2.3 2.3 2.3" rotation="0 -160 0"></a-entity>
+        </a-entity>
+        <a-entity position="-30 0.5 -18">
+            <a-entity gltf-model="#rock-single" scale="1.8 1.8 1.8" rotation="0 75 0"></a-entity>
+        </a-entity>
+        <a-entity position="30 0.5 -18">
+            <a-entity gltf-model="#rock-single" scale="1.7 1.7 1.7" rotation="0 -75 0"></a-entity>
+        </a-entity>
+        
+        <!-- Rocas decorativas laterales -->
+        <a-entity position="-25 0 -18">
+            <a-entity gltf-model="#rocks-var1" scale="1.5 1.5 1.5" rotation="0 270 0"></a-entity>
+        </a-entity>
+        <a-entity position="25 0 -18">
+            <a-entity gltf-model="#rocks-model" scale="1.6 1.6 1.6" rotation="0 60 0"></a-entity>
+        </a-entity>
+        
+        <!-- Campos de hierba grandes cercanos -->
+        <a-entity position="-15 0 -20">
+            <a-entity gltf-model="#grass-model" scale="2 2 2" rotation="0 0 0">
+                <a-animation attribute="rotation" from="0 0 0" to="0 360 0" dur="5000" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        <a-entity position="15 0 -20">
+            <a-entity gltf-model="#grass-model" scale="1.8 1.8 1.8" rotation="0 45 0">
+                <a-animation attribute="rotation" from="0 45 0" to="0 405 0" dur="6000" repeat="indefinite"></a-animation>
+            </a-entity>
+        </a-entity>
+        
+        <!-- Grupos de hierba dispersos cercanos -->
+        <a-entity id="grass-clusters-close">
+            <a-entity position="-8 0 -15">
+                <a-entity gltf-model="#grass-model" scale="1.4 1.4 1.4" rotation="0 90 0">
+                    <a-animation attribute="rotation" from="0 90 0" to="0 450 0" dur="5500" repeat="indefinite"></a-animation>
+                </a-entity>
+            </a-entity>
+            <a-entity position="8 0 -15">
+                <a-entity gltf-model="#grass-model" scale="1.6 1.6 1.6" rotation="0 180 0">
+                    <a-animation attribute="rotation" from="0 180 0" to="0 540 0" dur="5800" repeat="indefinite"></a-animation>
+                </a-entity>
+            </a-entity>
+        </a-entity>
+
+        <!-- Grupos de hierba laterales -->
+        <a-entity id="grass-clusters-sides">
+            <a-entity position="-20 0 -25">
+                <a-entity gltf-model="#grass-model" scale="1.5 1.5 1.5" rotation="0 270 0">
+                    <a-animation attribute="rotation" from="0 270 0" to="0 630 0" dur="5200" repeat="indefinite"></a-animation>
+                </a-entity>
+            </a-entity>
+            <a-entity position="20 0 -25">
+                <a-entity gltf-model="#grass-model" scale="1.7 1.7 1.7" rotation="0 0 0">
+                    <a-animation attribute="rotation" from="0 0 0" to="0 360 0" dur="5400" repeat="indefinite"></a-animation>
+                </a-entity>
+            </a-entity>
+        </a-entity>
+
+        <!-- Grupos de hierba de fondo -->
+        <a-entity id="grass-clusters-back">
+            <a-entity position="-25 0 -30">
+                <a-entity gltf-model="#grass-model" scale="1.8 1.8 1.8" rotation="0 45 0">
+                    <a-animation attribute="rotation" from="0 45 0" to="0 405 0" dur="5600" repeat="indefinite"></a-animation>
+                </a-entity>
+            </a-entity>
+            <a-entity position="25 0 -30">
+                <a-entity gltf-model="#grass-model" scale="1.6 1.6 1.6" rotation="0 135 0">
+                    <a-animation attribute="rotation" from="0 135 0" to="0 495 0" dur="5300" repeat="indefinite"></a-animation>
+                </a-entity>
+            </a-entity>
+            <a-entity position="0 0 -35">
+                <a-entity gltf-model="#grass-model" scale="2 2 2" rotation="0 90 0">
+                    <a-animation attribute="rotation" from="0 90 0" to="0 450 0" dur="5700" repeat="indefinite"></a-animation>
+                </a-entity>
+            </a-entity>
+        </a-entity>
+
+        <!-- Rocas pequeñas decorativas adicionales -->
+        <a-entity id="small-rocks-decoration">
+            <a-entity position="-15 0 -28">
+                <a-entity gltf-model="#rock-single" scale="1.2 1.2 1.2" rotation="0 30 0"></a-entity>
+            </a-entity>
+            <a-entity position="15 0 -28">
+                <a-entity gltf-model="#rock-single" scale="1.3 1.3 1.3" rotation="0 150 0"></a-entity>
+            </a-entity>
+            <a-entity position="-10 0 -25">
+                <a-entity gltf-model="#rock-single" scale="1.1 1.1 1.1" rotation="0 210 0"></a-entity>
+            </a-entity>
+            <a-entity position="10 0 -25">
+                <a-entity gltf-model="#rock-single" scale="1.2 1.2 1.2" rotation="0 300 0"></a-entity>
+            </a-entity>
+        </a-entity>
       <a-entity gltf-model="#rock-single" scale="1.5 1.5 1.5" rotation="0 -60 0"></a-entity>
     </a-entity>
     <a-entity position="45 0 -38">
@@ -405,14 +914,28 @@
     </a-entity>
 
     <!-- Parches de hierba -->
-    <a-entity position="0 0 -30">
+    <a-entity position="0 2 -15">
       <a-entity gltf-model="#grass-model" scale="1.5 1.5 1.5"></a-entity>
     </a-entity>
-    <a-entity position="-15 0 -28">
+    <a-entity position="-15 2 -13">
       <a-entity gltf-model="#grass-model" scale="1.2 1.2 1.2" rotation="0 45 0"></a-entity>
     </a-entity>
-    <a-entity position="18 0 -32">
+    <a-entity position="18 2 -17">
       <a-entity gltf-model="#grass-model" scale="1.3 1.3 1.3" rotation="0 -30 0"></a-entity>
+    </a-entity>
+    
+    <!-- Nuevos parches de hierba adicionales -->
+    <a-entity position="-35 0.2 -20">
+      <a-entity gltf-model="#grass-model" scale="1.4 1.4 1.4" rotation="0 90 0"></a-entity>
+    </a-entity>
+    <a-entity position="35 0.2 -20">
+      <a-entity gltf-model="#grass-model" scale="1.4 1.4 1.4" rotation="0 -90 0"></a-entity>
+    </a-entity>
+    <a-entity position="-25 0.2 -35">
+      <a-entity gltf-model="#grass-model" scale="1.3 1.3 1.3" rotation="0 180 0"></a-entity>
+    </a-entity>
+    <a-entity position="25 0.2 -35">
+      <a-entity gltf-model="#grass-model" scale="1.3 1.3 1.3" rotation="0 0 0"></a-entity>
     </a-entity>
 
     <!-- Sistema de nubes -->
@@ -506,57 +1029,7 @@
         console.log('DEBUG - typeof AFRAME =', typeof window.AFRAME);
         const scene = document.querySelector('a-scene');
         console.log('DEBUG - a-scene element:', !!scene);
-        if (!window.AFRAME || !scene) return;
-        if (scene.hasLoaded) {
-          console.log('DEBUG - a-scene hasLoaded = true');
-          addDebugMarker();
-        } else {
-          scene.addEventListener('loaded', addDebugMarker);
-          console.log('DEBUG - esperando evento loaded de a-scene');
-        }
       }
-
-      function addDebugMarker() {
-        try {
-        if (document.getElementById('debug-marker')) return;
-        const marker = document.createElement('a-box');
-        marker.id = 'debug-marker';
-        // placeholder simple para el generator; el modelo real se cargará de forma diferida
-        marker.setAttribute('position','0 3 -3');
-        marker.setAttribute('width','0.5');
-        marker.setAttribute('height','0.5');
-        marker.setAttribute('depth','0.5');
-        marker.setAttribute('material', 'shader: standard; color: #ff00ff; emissive: #ff00ff; emissiveIntensity: 0.3; metalness: 0.7; roughness: 0.3');
-        marker.setAttribute('animation','property: rotation; to: 0 360 0; loop: true; dur: 4000');
-        // marcar data-src para que el loader pueda aplicar el modelo glb más tarde
-        marker.setAttribute('data-model-src', '/static/sprites/assets/generator.glb');
-        const scene = document.querySelector('a-scene');
-        scene.appendChild(marker);
-              // Dibujar una línea tenue desde el marker hacia la línea roja (z = 2)
-              try {
-                const pos = marker.getAttribute('position');
-                const markerZ = (pos && pos.z) ? pos.z : -3;
-                const length = Math.max(0.1, 2 - markerZ);
-                const midZ = markerZ + (length / 2);
-                const line = document.createElement('a-cylinder');
-                line.id = 'marker-line';
-                line.setAttribute('position', `${pos.x || 0} 0.5 ${midZ}`);
-                line.setAttribute('height', `${length}`);
-                line.setAttribute('radius', '0.02');
-                line.setAttribute('rotation', '90 0 0');
-                line.setAttribute('color', '#ff99ff');
-                line.setAttribute('opacity', '0.25');
-                line.setAttribute('material', 'transparent: true;');
-                scene.appendChild(line);
-              } catch (e) {
-                // no crítico si no se puede dibujar la línea
-              }
-          console.log('DEBUG - marker añadido a la escena');
-        } catch (e) {
-          console.error('DEBUG - no se pudo añadir marker', e);
-        }
-      }
-
       setTimeout(logAndMark, 300);
     })();
   </script>

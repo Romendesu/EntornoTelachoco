@@ -327,8 +327,11 @@ function createMiniCube(x, y, z) {
     mini.setAttribute('gltf-model', '#butter-robot');
     // Hacemos el mini-robot más grande para visibilidad
     mini.setAttribute('scale', '2.2 2.2 2.2');
-    // Rotación para que mire hacia la cámara
-    mini.setAttribute('rotation', '0 180 0');
+    // Rotación inicial mirando al jugador
+    const initialZ = z || -3;
+    const initialX = x || 0;
+    const initialAngle = Math.atan2(0 - initialX, 0 - initialZ) * (180/Math.PI);
+    mini.setAttribute('rotation', `0 ${initialAngle + 180} 0`);
     // indicar profundidad física aproximada para colisiones/chequeo de línea
     mini.setAttribute('depth', '1.2');    // Debug - imprimir información de carga
     console.log('Creando mini con modelo precargado');
@@ -369,6 +372,11 @@ function moverMiniCube(mini) {
     const speed = (window.miniSpeed !== undefined) ? window.miniSpeed : 0.16;
     pos.z += speed; // velocidad de los minicubos
     mini.setAttribute('position', pos);
+    
+    // Calcular la rotación para mirar al jugador (que está en Z = 0)
+    // Usamos Math.atan2 para obtener el ángulo entre la posición actual y el jugador
+    const angleToPlayer = Math.atan2(0 - pos.x, 0 - pos.z) * (180/Math.PI);
+    mini.setAttribute('rotation', `0 ${angleToPlayer + 180} 0`); // +180 para que mire de frente
 
     // Primero, comprobar si el jugador hizo el gesto que destruye este mini
     const currentGesto = (window.ultimoGesto !== undefined) ? window.ultimoGesto : ultimoGesto;
