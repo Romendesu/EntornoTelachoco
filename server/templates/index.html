@@ -4,66 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Entorno de gestos 3D</title>
+
+    <!-- A-Frame -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <style>
-      body {
-        margin: 0;
-        overflow: hidden;
-        font-family: Arial, sans-serif;
-        background-color: #000;
-      }
 
-      /* Cámara en vivo (arriba a la derecha) */
-      #overlay {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        width: 400px;
-        height: 300px;
-        border: 2px solid #00ffff;
-        border-radius: 10px;
-        overflow: hidden;
-        z-index: 2;
-        background: rgba(0, 0, 0, 0.5);
-        box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
-      }
-
-      #overlay img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        display: block;
-      }
-
-      .label {
-        position: absolute;
-        top: 10px;
-        right: 30px;
-        color: #00ffff;
-        font-size: 16px;
-        font-weight: bold;
-        text-shadow: 0 0 10px #00ffff;
-        z-index: 3;
-      }
-
-      /* Texto HUD (fijo en pantalla) */
-      #hud-text {
-        position: absolute;
-        bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.6);
-        color: #00ffff;
-        border: 2px solid #00ffff;
-        border-radius: 10px;
-        padding: 10px 25px;
-        font-size: 22px;
-        font-weight: bold;
-        text-shadow: 0 0 10px #00ffff;
-        z-index: 3;
-        font-family: monospace;
-      }
-    </style>
+    <!-- CSS externo -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   </head>
 
   <body>
@@ -96,32 +42,7 @@
       </a-entity>
     </a-scene>
 
-    <script>
-      const hudText = document.getElementById("hud-text");
-      let ultimoGesto = "";
-
-      async function actualizarGesto() {
-        try {
-          const res = await fetch("/ultimo_gesto");
-          const data = await res.json();
-          const gesto = data.gesto;
-
-          if (gesto && gesto !== ultimoGesto) {
-            ultimoGesto = gesto;
-            hudText.textContent = `Gesto: ${gesto}`;
-
-            // Voz al cambiar gesto
-            const utter = new SpeechSynthesisUtterance(gesto);
-            utter.lang = "es-ES";
-            utter.rate = 1.1;
-            speechSynthesis.speak(utter);
-          }
-        } catch (e) {
-          console.error("Error obteniendo gesto:", e);
-        }
-      }
-
-      setInterval(actualizarGesto, 700);
-    </script>
+    <!-- JS externo -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
   </body>
 </html>
